@@ -114,3 +114,88 @@ fun main(args: Array<String>) {
 
 가급적 문자열 리터럴을 사용할 때는 중괄호를 붙여 가독성을 높이고 한글로 인한 오류를 방지하자.
 
+
+## 2.2 클래스와 프로퍼티
+```java
+public class Person {
+    private final String name;
+
+    public Person(String name) {
+        this.name = name;
+    }
+    
+    public String getName() {
+        return name;
+    }
+}
+```
+
+필드가 늘어날 수록 생성자의 개수도 늘어난다. 
+```kotlin
+class Person(val name: String)
+```
+
+이런 유형의 코드가 없이 데이터만 저장하는 클래스를 `값 객체`라고 부른다. 코틀린의 기본 가시성은 public이므로 이런 경우 변경자를 생략해도 된다.
+
+### 2.2.1 프로퍼티
+클래스라는 개념의 목적은 데이터를 캡슐화하고 캡슐화한 데이터를 다루는 코드를 한 주체 아래 가두는 것이다. 자바에서는 데이터를 필드에 저장하며, 멤버 필드의 가시성은  
+보통 비공개다. 클래스는 자신을 사용하는 클라이언트가 그 데이터에 접근하는 통로로 쓸 수 있는 `접근자 메소드` 를 제공한다(getter, setter).  
+자바에서는 필드와 접근자를 한데 묶어 `프로퍼티`라고 부르며 프로퍼티라는 개념을 활용하는 프레임워크가 많다. 코틀린은 프로퍼티를 언어 기본 기능으로 제공하며, 코틀린  
+프로퍼티는 자바의 필드와 접근 메소드를 완전히 대신한다.
+```kotlin
+class Person {
+    val name: String, // 읽기 전용 프로퍼티로, 코틀린은 비공개 필드와 필드를 읽는 단순한 공개 게터를 만들어낸다.
+    var isMarried: Boolean // 쓸 수 있는 프로퍼티로, 코틀린은 비공개 필드, 공개 게터, 공개 세터를 만들어낸다.
+}
+```
+
+게터와 세터의 이름을 정하는 규칙에는 예외가 있다. 이름이 is로 시작하는 프로퍼티의 게터에는 get이 붙지 않고 원래 이름 그대로 사용하며, 세터에는 is를 set으로 바꾼  
+이름을 사용한다.
+```kotlin
+val person = Person("Bob", true) // new 키워드를 사용하지 않고 생성자를 호출한다.
+println(person.name) // 프로퍼티 이름을 직접 사용해도 코틀린이 자동으로 게터를 호출해준다.
+println(person.isMarried)
+```
+
+자바에서는 person.setMarried(false) 를 쓰지만 코틀린에서는 person.isMarried = false를 쓴다.  
+대부분의 프로퍼티에는 그 프로퍼티의 값을 저장하기 위한 필드가 있다. 이를 프로퍼티를 `뒷받침하는 필드`라고 부른다. 하지만 원한다면 프로퍼티 값을 그때그때 계산할 수도  
+있다. 커스텀 게터를 작성하면 그런프로퍼티를 만들 수 있다.
+
+### 2.2.2 커스텀 접근자
+이번 절에서는 프로퍼티의 접근자를 직접 작성하는 방법을 보여준다. 직사각현 클래스인 Rectangle을 정의하면서 자신이 정사각형인지 알려주는 기능을 만들어보자.  
+직사각형이 정사각형인지를 별도의 필드에 저장할 필요가 없다. 사각형의 너비와 높이가 같은지 검사하면 정사각형의 여부를 그때그때 알 수 있다.
+```kotlin
+class Rectangle(val height: Int, val width: Int) {
+    val isSquare: Boolean
+        get() {
+            return height == width // get() = height = width
+        }
+}
+```
+
+### 2.2.3 코틀린 소스코드 구조: 디렉터리와 패키지
+모든 코틀린 파일의 맨 앞에 package문을 넣을 수 있다. 그러면 그 파일 안에 있는 모든 선언(클래스, 함수, 프로퍼티 등)이 해당 패키지에 들어간다. 같은 패키지에  
+속해 있다면 다른 파일에서 정의한 선언일지라도 직접 사용할 수 있다. 반면 다른 패키지에 정의한 선언을 사용하려면 임포트를 통해 선언을 불러와야 한다. 자바와 마찬가지로  
+임포트문은 파일의 맨 앞에 와야 하며 import 키워드를 사용한다.
+```kotlin
+package geometry.shapes
+
+import java.util.Random
+
+class Rectangle(val height: Int, val width: Int) {
+    val isSquare: Boolean
+        get() = height == width
+}
+
+fun createRandomRectangle() : Rectangle { 
+    val random = Random()
+    return Rectangle(random.nextInt(), random.nextInt())
+}
+```
+
+코틀린에서는 클래스 임포트와 함수 임포트 차이가 없으며, 모든 선언을 import 키워드로 가져올 수 있다. 최상위 함수는 그 이름을 써서 임포트할 수 있다.  
+
+자바에서는 패키지 구조와 일치하는 디렉터리 계층 구조를 만들고 클래스의 소스코드를 그 클래스가 속한 패키지와 같은 디렉터리에 위치시켜야 한다.  
+코틀린에서는 여러 클래스를 한 파일에 넣을 수 있고, 파일의 이름도 마음대로 정할 수 있다. 디스크상의 어느 디렉터리에 소스코드 파일을 위치시키든 관계없다. 하지만  
+대부분의 경우 자바와 같이 패키지별로 디렉터리를 구성하는 편이 낫다. 
+
