@@ -199,3 +199,145 @@ fun createRandomRectangle() : Rectangle {
 코틀린에서는 여러 클래스를 한 파일에 넣을 수 있고, 파일의 이름도 마음대로 정할 수 있다. 디스크상의 어느 디렉터리에 소스코드 파일을 위치시키든 관계없다. 하지만  
 대부분의 경우 자바와 같이 패키지별로 디렉터리를 구성하는 편이 낫다. 
 
+
+## 2.3 선택 표현과 처리: enum과 when
+when은 자바의 swith를 대치하되 훨씬 더 강력하며, 앞으로 더 자주 사용할 프로그래밍 요소라고 생각할 수 있다. when에 대해 설명하는 과정에서 코틀린에서 enum을  
+선언하는 방법과 스마트 캐스트에 대해서도 살펴본다.
+
+#### 2.3.1 enum 클래스 정의
+```kotlin
+enum calss Color {
+    RED, ORANGE, YELLOW
+}
+```
+
+코틀린에서 enum은 `소프트 키워드`라 부르는 존재다. enum은 class 앞에 있을 때는 특별한 의미를 지니지만 다른 곳에서는 이름에 사용할 수 있다. 반면 class는  
+키워드다. 따라서 class라는 이름을 사용할 수 없으므로 클래스를 표현하는 변수 등을 정의할 때는 clazz나 aClass와 같은 이름을 사용해야 한다.  
+enum 클래스 안에도 프로퍼티나 메소드를 정의할 수 있다. 
+```kotlin
+enum class Color (val r: Int, val g: Int, val b: Int) {
+    RED(255, 0, 0), ORANGE(255, 165, 0); // 여기 반드시 세미콜론을 사용해야 한다.
+    
+    fun rgb() = (r * 256 + g) * 256 + b
+}
+```
+
+### 2.3.2 when으로 enum 클래스 다루기
+자바의 swith에 해당하는 코틀린 구성요소는 when이다. if와 마찬가지로 when도 값을 만들어내는 식이다.
+```kotlin
+fun getMnemonic(color: Color) = 
+    when (color) {
+        Color.RED -> "Richard"
+        Color.Orange -> "Of"
+    }
+```
+
+자바와 달리 각 분기의 끝에 break를 넣지 않아도 된다. 성공적으로 매치되는 분기를 찾으면 switch는 그 분기를 실행한다. 한 분기 안에 여러 값을 매치 패턴으로  
+사용할 수도 있다. 그럴 경우 값 사이를 콤마로 분리한다. 
+```kotlin
+fun getWarmth(color: Color) = when(color) {
+    Color.RED, Color.ORANGE -> "warm"
+    Color.BLUE -> "cold"
+}
+```
+
+### 2.3.3 when과 임의의 객체를 함께 사용
+자바 switch와 달리 when의 분기 조건은 임의의 객체를 허용한다. 두 색을 혼합했을 때 미리 정해진 팔레트에 들어있는 색이 될 수 있는지 알려주는 함수를 작성하자. 
+```kotlin
+fun mix(c1: Color, c2: Color) =
+    when (setOf(c1, c2)) {
+        setOf(RED, YELLOW) -> ORANGE
+        else -> throw Exception("Dirty color")
+    }
+```
+
+when의 분기 조건에 식을 넣을 수 있기 때문에 많은 경우 코드를 더 간결하고 아름답게 작성할 수 있다.
+
+### 2.3.4 인자 없는 when 사용
+이전의 함수는 호출될 때마다 함수 인자로 주어진 두 색이 when의 분기 조건에 있는 다른 두 색과 같은지 비교하기 위해 여러 Set 인스턴스를 생성하는데 이는 불필요한  
+가비지 객체를 늘어나게 할 수 있다. 인자가 없는 when식을 사용하면 불필요한 객체 생성을 막을 수 있다. 코드는 약간 읽기 어려워지지만 성능을 더 향상시키지 위해  
+그 정도 비용을 감수해야 하는 경우도 자주 있다.
+
+```kotlin
+fun mixOptimized(c1: Color, c2: Color) = 
+    when {
+        (c1 == RED && c2 == YELLOW) ||
+                (c1 == YELLOW && c2 == RED) -> ORANGE
+        else -> throw Exception("Dirty color")
+    }
+```
+
+when에 아무 인자도 없으려면 각 분기의 조건이 불리언 결과를 계산하는 식이어야 한다.
+
+### 2.3.5 스마트 캐스트: 타입 검사와 타입 캐스트를 조합
+(1 + 2) + 4 와 같은 간단한 산술식을 계산하는 함수를 만들어보자. 우선 식을 인코딩하는 방법을 생각해야 한다. 식을 트리 구조로 저장하자. 노드는 합계나 수 중  
+하나다. Num은 항상 말단 노드지만, Sum은 자식이 둘 있는 중간 노드다. Sum 노드의 두 자식은 덧셈의 두 인자다.  
+클래스가 구현하는 인터페이스를 지정하기 위해서 콜론 뒤에 인터페이스 이름을 사용한다. Expr 인터페이스는 아무 메소드도 선언하지 않으며, 단지 여러 타입의 식 객체를  
+아우르는 공통 타입 역할만 수행한다.
+```kotlin
+interface Expr
+class Num(val value: Int) : Expr
+class Sum(val left: Expr, val right: Expr) : Expr
+```
+
+(1 + 2) + 4라는 식을 저장하면 Sum(Sum(Num(1), Num(2)), Num(4)) 라는 구조의 객체가 생긴다.  
+Expr 인터페이스에는 두 가지 구현 클래스가 존재한다. 따라서 식을 평가하려면 두 가지 경우를 고려해야 한다.  
+- 어떤 식이 수라면 그 값을 반환한다.  
+- 어떤 식이 합계라면 좌항과 우항의 값을 계산한 다음에 그 두 값을 합한 값을 반환한다.  
+자바 스타일로 작성한 함수를 먼저 살펴본 다음 코틀린 스타일로 만든 함수를 살펴보자.
+  
+```kotlin
+
+ import java.lang.IllegalArgumentExceptionfun eval (e: Expr) : Int {
+    if (e is Num) {
+        val n = e as Num // 여기서 Num 타입을 변환하는데, 이는 불필요한 중복이다.
+        return n.value
+    }
+    if (e is Sum) {
+        return eval(e.right) + eval(e.left) // 변수 e에 대해 스마트 캐스트를 사용한다.
+    }
+    throw IllegalArgumentException("Unknown expression")
+}
+```
+
+코틀린에서는 is를 사용해 변수 타입을 검사한다. 자바에서는 명시적으로 변수 타입을 캐스팅해야 하지만 코틀린에서는 프로그래머 대신 컴파일러가 캐스팅을 해준다. 어떤  
+변수가 원하는 타입인지 일단 is로 검사하고 나면 굳이 변수를 원하는 타입으로 캐스팅하지 않아도 마치 처음부터 그 변수가 원하는 타입으로 선언된 것처럼 사용할 수 있다.  
+하지만 실제로는 컴파일러가 캐스팅을 수행해준다. 이를 `스마트 캐스트`라고 부른다.  
+원하는 타입으로 명시적으로 타입 캐스팅하려면 as 키워드를 사용한다. 
+```kotlin
+val n = e as Num
+```
+
+이제 eval 함수를 리팩토링해서 더 코틀린 다운 코드로 만드는 방법을 살펴보자.
+
+### 2.3.6 리팩토링: if를 when으로 변경
+코틀린에서는 if가 값을 만들어 내기 때문에 3항 연산자가 따로 없다. 이런 특성을 사용하면 eval 함수에서 return문과 중괄호를 없애고 if 식을 본문으로 사용해 더  
+간단하게 만들 수 있다. 
+```kotlin
+
+ import java.lang.IllegalArgumentExceptionfun eval(e: Expr) : Int = 
+    if (e is Num) {
+        e.value
+    } else if (e is Sum) {
+        eval(e.right) + eval(e.left)
+    } else {
+        throw IllegalArgumentException("Unknown expression")
+    }
+```
+
+if 분기에 식이 하나 밖에 없다면 중괄호를 생략해도 된다. if 분기에 블록을 사용하는 경우 그 블록의 마지막 식이 그 분기의 결과 값이다.
+
+```kotlin
+
+ import java.lang.IllegalArgumentExceptionfun eval(e: Expr) : Int = 
+    when (e) {
+        is Num -> e.value
+        is Sum -> eval(e.right) + eval(e.left)
+        else -> throw IllegalArgumentException("Unknown expression)
+    }
+```
+
+### 2.3.7 if와 when의 분기에서 블록 사용
+if나 when 모두 분기에 블록을 사용할 수 있다. 그런 경우 블록의 마지막 문장이 블록 전체의 결과가 된다. '블록의 마지막 식이 블록의 결과'라는 규칙은 블록이 값을  
+만들어내야 하는 경우 항상 성립한다. 하지만 함수에서는 식이 본문이 함수는 블록을 본문으로 가질 수 없고 블록이 본문인 함수는 내부에 return 문이 반드시 있어야 한다.
+
