@@ -434,3 +434,58 @@ fun recognize(c: Char) = when (c) {
     else -> "I don't know"
 }
 ```
+
+
+## 2.5 코틀린의 예외 처리
+코틀린의 예외 처리는 자바나 다른 언어의 예외 처리와 비슷하다. 함수는 정상적으로 종료할 수 있지만 오류가 발생하면 예외를 던질 수 있다. 
+```kotlin
+
+ if (percentage !in 0..100) {
+    throw IllegalArgumentException("$percentage")
+}
+```
+
+다른 클래스와 마찬기지로 예외 인스턴스를 만들 때도 new를 붙일 필요가 없다. 자바와 달리 코틀린의 throw는 식이므로 다른 식에 포함될 수 있다.
+
+```kotlin
+
+val percentage = 
+    if (number in 0..100) 
+        number
+    else 
+        throw IllegalArgumentException
+```
+
+### 2.5.1 try, catch, finally
+자바와 마찬가지로 예외를 처리하려면 try와 catch, finally 절을 함께 사용한다.
+```kotlin
+
+ fun readNumber (reader: BufferedReader) : Int? { // 함수가 던질 수 있는 예외를 명시할 필요가 없다.
+    try {
+        val line = reader.readLine()
+        return Integer.parseInt(line)
+    } catch (e: NumberFormatException) { // 예외 타입을 :의 오른쪽에 쓴다.
+        return null
+    } finally {
+        reader.close()
+    }
+}
+```
+
+자바에서는 체크 예외를 명시적으로 처리해야 한다. 코틀린에서는 체크예외와 언체크예외를 잘 구분하지 않는다. 함수가 던지는 예외를 지정하지 않고, 발생한 예외를 잡아내도  
+되고 잡아내지 않아도 된다. 
+
+### 2.5.2 try를 식으로 사용
+이전의 예제에서 finally절을 없애고 파일에서 읽은 수를 출력하는 코드를 추가하자.
+```kotlin
+fun readNumber(reader: BufferedReader) {
+    val number = try {
+        Integer.parseInt(reader.readLine())
+    } catch (e: NumberFormatException) {
+        return 
+    }
+}
+```
+
+코틀린의 try 키워드는 if나 when과 마찬가지로 식이다. 따라서 try의 값을 변수에 대입할 수 있다. if와 달리 try의 본문을 반드시 중괄호로 둘러싸야 한다. 다른  
+문장과 마찬가지로 try의 본문도 내부에 여러 문장이 있으면 마지막 식의 값이 전체 결과 값이다.
