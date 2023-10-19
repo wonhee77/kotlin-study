@@ -151,3 +151,113 @@ val UNIX_LINE_SEPARATOR = "\n"
 const val UNIX_LINE_SEPARATOR = "\n"
 ```
 
+
+## 3.3 메소드를 다른 클래스에 추가: 확장 함수와 확장 프로퍼티
+기존 자바 API를 재작성하지 않고도 코틀린이 제공하는 여러 편리한 기능을 사용할 수 있다면 정말 좋을 일 아닐까? 바로 `확장 함수`가 그런 역할을 해줄 수 있다.  
+확장 함수는 어떤 클래스의 멤버 메소드인 것처럼 호출할 수 있지만 그 클래스의 밖에 선언된 함수다. 확장 함수를 보여주기 위해 어떤 문자열의 마지막 문자를 돌려주는  
+메소드를 추가해보자.
+```kotlin
+package strings
+fun String.lastChat() : Char = this.get(this.length - 1)
+```
+
+확장 함수를 만들려면 추가하려는 함수 이름 앞에 그 함수가 확장할 클래스의 이름을 덧붙이기만 하면 된다. 클래스 이름을 `수신 객체 타입`이라 부르며, 확장 함수가  
+호출되는 대상이 되는 값을 `수신 객체`라고 부른다.
+```kotlin
+>>> println("Kotlin".lastChar())
+```
+
+이 예제에서는 String이 수신 객체 타입이고 "kotlin"이 수신 객체다.  
+어떤 면에서 이는 String 클래스에 새로운 메소드를 추가하는 것과 같다. String 클래스가 직접 작성한 코드가 아니고 심지어 String 클래스의 소스코드를 소유한 것도  
+아니지만, 여전히 원하는 메소드를 String 클래스에 추가할 수 있다. 자바 클래스로 컴파일한 클래스 파일이 있는 한 그 클래스에 원하는 대로 확장을 추가할 수 있다.  
+하지만 확장 함수가 캡슐화를 깨지는 않는다. 확장 함수 안에서는 클래스 내부에서만 사용할 수 있는 비공개 멤버나 보호된 멤버를 사용할 수 없다.  
+이제부터는 클래스의 멤버 메소드와 확장 함수를 모두 메소드라고 부를 것이다.
+
+### 3.3.1 임포트와 확장 함수
+확장 함수를 정의했다고 해도 자동으로 프로젝트 안의 모든 소스코드에서 그 함수를 사용할 수 있지는 않다. 확장함수를 사용하기 위해서는 임포트를 해야만 한다. 확장 함수를  
+정의하자마자 어디서든 그 함수를 쓸 수 있다면 한 클래스에 같은 이름의 확장 함수가 둘 이상 있어서 이름이 충돌하는 경우가 자주 생길 수 있다.
+```kotlin
+import strings.lastChar
+
+val c = "Kotlin".lastChar()
+```
+
+as 키워드를 사용하면 임포트한 클래스나 함수를 다른 이름으로 부를 수 있다.
+```kotlin
+import strings.lastChat as last
+val c = "Kotlin".last()
+```
+
+한 파일 안에서 다른 여러 패키지에 속해있는 이름이 같은 함수를 가져와 사용해야 하는 경우 이름을 바꿔서 임포트하면 이름 충돌을 막을 수 있다. 
+
+### 3.3.2 자바에서 확장 함수 호출
+내부적으로 확장 함수는 수신 객체를 첫 번째 인자로 받는 정적 메소드다. 확장 함수를 StringUtil.kt 파일에 정의했다면 다음과 같이 호출할 수 있다.
+```java
+char c = StringUtilKt.lastChar("Java");
+```
+
+### 3.3.3 확장 함수로 유틸리티 함수 정의
+```java
+fun <T> Collection<T>.joinToString( // Collection<T>에 대한 확장 함수를 선언한다.
+    separator: String = ", ",
+    prefix: String = "",
+    postfix: String = ""
+    ) : String {
+        val rsult = StringBuilder(prefix)
+    for ((index, element) in this.withIndex())
+        if (index > 0 ) result.append(separator)
+        result.append(element)
+    }
+    result.append(postfix)
+    return reusult.toString()
+```
+
+원소로 이뤄진 컬렉션에 대한 확장을 만든다. 그리고 모든 인자에 대한 디폴트 값을 지정한다. 이제 joinToString을 마치 클래스의 멤버인 것처럼 호출할 수 있다.
+```java
+>>> val list = arrayListOf(1, 2, 3)
+>>> println(list.joinToString(" "))
+```
+
+확장 함수는 단지 정적 메소드 호출에 대한 문법적인 편의일 뿐이다. 그래서 클래스가 아닌 더 구체적인 타입을 수신 객체 타입으로 지정할 수도 있다. 그래서 문자열의  
+컬렉션에 대해서만 호출할 수 있는 join 함수를 정의하고 싶다면 다음과 같이 하면 된다.
+```java
+fun Collection<String>.join()
+```
+
+### 3.3.4 확장 함수는 오버라이드 할 수 없다
+확장 함수는 오버라이드 할 수 없다. View와 그 하위 클래스인 Button이 있는데 Button이 상위 클래스의 click 함수를 오버라이드하는 경우를 생각해보자.
+```java
+open class View {
+    open fun click() = println("View clicked")
+}
+
+class Button: View() {
+    override fun click() = println("Button clicked")
+}
+```
+
+Button이 View의 하위 타입이기 때문에 View 타입 변수를 선언해도 Button 타입 변수를 그 변수에 대입할 수 있다.  
+하지만 확장 함수는 클래스의 일부가 아니다. 확장 함수는 클래스 밖에 선언된다. 코틀린은 호출될 확장 함수를 정적으로 결정한다.
+
+* 어떤 클래스를 확장한 함수와 그 클래스의 멤버 함수의 이름과 시그니처가 같다면 멤버 함수가 호출된다.
+
+### 3.3.5 확장 프로퍼티
+확장 프로퍼티를 사용하면 기존 클래스 객체에 대한 프로퍼티 형식의 구문으로 사용할 수 있는 API를 추가할 수 있다. 프로퍼티라는 이름으로 불리기는 하지만 상태를 저장할  
+적절한 방법이 없기 때문에 실제로 확장 프로퍼티는 아무 상태도 가질 수 없다. 하지만 프로퍼티 문법으로 더 짧게 코드를 작성할 수 있어서 편한 경우가 있다.  
+앞 절에서 lastChar라는 함수를 정의했다. 이제 그 함수를 프로퍼티로 바꾸자.
+```java
+val String.lastChar: char
+    get() = get(length - 1)
+```
+
+확장 함수의 경우와 마찬가지로 확장 프로퍼티도 일반적인 프로퍼티와 같은데 단지 수신 객체 클래스가 추가됐을 뿐이다. 뒷받침한느 필드가 없어서 기본 게터 구현을 제공할  
+수 없으므로 최소한의 게터는 꼭 정의를 해야 한다. 마찬가지로 초기화 코드에서 계산한 값을 담을 장소가 전혀 없으므로 초기화 코드도 쓸 수 없다.  
+StringBuilder에 같은 프로퍼티를 정의한다면 StringBuilder의 맨 마지막 문자는 변경 가능하므로 프로퍼티를 var로 만들 수 있다.
+```java
+var StringBuilder.lastChar: Char
+    get() = get(length - 1)
+    set(value: Char) {
+        this.setChatAt(length - 1, value)
+    }
+```
+
