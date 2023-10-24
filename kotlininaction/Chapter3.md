@@ -363,3 +363,51 @@ fun parsePath(path: String) {
 3중 따옴표 문자열을 문자열 이스케이프를 피하기 위해서만 사용하지는 않는다. 3중 따옴표를 쓰면 줄 바꿈이 들어있는 프로그램 텍스트를 쉽게 문자열로 만들 수 있다.
 
 
+## 3.6 코드 다듬기: 로컬 함수와 확장
+코틀린에서는 함수에서 추출한 함수를 원 함수 내부에 중첩시킬 수 있다. 흔히 발생하는 코드 중복을 로컬 함수를 통해 어떻게 제거할 수 있는지 살펴보자.
+```kotlin
+class User(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+    if (user.name.isEmpty()) {
+        throw IllegalArgumentException("")
+    }
+    if (user.address.isEmpty()) {
+        throw IllegalArgumentException("")
+    }
+}
+```
+
+위 예제에서는 이름과 주소를 검증하는 로직이 중복된다. 이런 경우 검증 코드를 로컬 함수로 분리하면 중복을 없애는 동시에 코드 구조를 깔끔하게 가져갈 수 있다.
+```kotlin
+class User(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+    fun validate(user: User, value: String, fieldName: String) {
+        if (value.isEmpty()) {
+            throw IllegalArgumentException("")
+        }
+    }
+    validate(user, user.name, "Name")
+    validate(user, user.address, "Address")
+}
+```
+
+로컬 함수는 자신이 속한 바깥 함수의 모든 파라미터와 변수를 사용할 수 있다. 이런 성질을 이용해 불필요한 User 파라미터를 없애보자.
+```kotlin
+class User(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+    fun validate(value: String, fieldName: String) {
+        if (value.isEmpty()) {
+            throw IllegalArgumentException("")
+        }
+    }
+    validate(user, user.name, "Name")
+    validate(user, user.address, "Address")
+}
+```
+
+이 예제를 더 개선하고 싶다면 검증 로직을 User 클래스로 확장한 함수로 만들 수도 있다. 확장 함수를 로컬 함수로 정의할 수도 있지만 중첩된 함수의 깊이가 깊어지면  
+코드를 읽기가 상당히 어려워지기 때문에 일반적으론느 한 단계만 함수를 중첩시키리고 권장한다.
+
