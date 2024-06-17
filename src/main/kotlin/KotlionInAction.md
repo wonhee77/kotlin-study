@@ -313,3 +313,98 @@ catch 문에서는 예외 타입을 :의 오른쪽에 쓴다. catch (e : Runtime
 - if는 코틀린에서 식이며, 값을 만들어 낸다.
 - when은 자바의 switch와 비슷하지만 더 강력하다.
 - 어떤 변수의 타입 검사를 하고 나면 굳이 그 변수를 캐스팅하지 않아도 검사한 타입의 변수처럼 사용할 수 있다.
+
+# 3장 함수 정의와 호출
+
+## 3.1 코틀린에서 컬렉션 만들기
+
+```kotlin
+val set = hashSetOf(1, 2, 3)
+val list = arrayListOf(1, 2, 3)
+val map = hashMapOf(1 to "one", 2 to "two") // to는 키워드가 아니라 일반 함수다.
+```
+
+```kotlin
+>>> println(set.javaclass) // javaclass는 자바 getClass()에 해당하는 코틀린 코드
+class.java.util.HashSet
+```
+
+이는 코틀린이 자신만의 컬렉션 기능을 제공하지 않는다는 뜻이다. 코틀린 컬렉션은 자바 컬렉션과 똑같은 클래스지만 더 많은 기능을 쓸 수 있다.
+
+## 3.2 함수를 호출하기 쉽게 만들기
+
+자바 컬렉션에는 디폴트 toString()구현이 들어가 있다. 코틀린 메소드로 원소 사이를 구분하고 괄호를 변경하는 function을 만들어 보자.
+
+```kotlin
+fun <T> joinToString(
+	collection: Collection<T>,
+	seperator: String,
+	prefix: String,
+	postfix: String
+) : String {
+	val result = StringBuilder(prefix)
+	for ((index, element) in collection.withIndex()) {
+		if (index > 0) result.append(seperator)
+		result.applend(element)
+	}
+	result.append(postfix)
+	return result.toString()
+}
+```
+
+### 3.2.1 이름을 붙인 인자
+
+함수의 인자로 전달한 문자열이 어떤 역할을 하는지 알기 어렵다.
+
+```kotlin
+joinToString(collection, seperator = " ", prefix = " ", postfix = ".")
+```
+
+코틀린으로 작성한 함수를 호출할 때는 함수에 전달하는 인자 중 일부의 이름을 명시할 수 있다. 어느 하나라도 이름을 명시하고 나면 혼동을 막기 위해 그 뒤에 오는 모든 인자는 이름을 꼭 명시해야 한다.
+
+### 3.2.2 디폴트 파라미터 값
+
+자바에서는 일부 클래스에서 오버로딩한 메소드가 너무 많아지는 문제가 있다. 코틀린에서는 함수 선언에서 파라미터의 디폴트 값을 지정할 수 있으므로 오버로드 중 상당수를 피할 수 있다.
+
+```kotlin
+fun <T> joinToString(
+	collection: Collection<T>,
+	seperator: String = ", ",
+	prefix: String = "",
+	postfix: String = ""
+): String
+
+>>> joinToString(list, ", ", "", "")
+>>> joinToString(list)
+>>> joinToString(list, "; "
+```
+
+일반 호출 문법을 사용하려면 함수를 선언할 때와 같은 순서로 인자를 지정해야 한다.
+
+이름 붙은 인자를 사용하는 경우에는 인자 목록의 중간에 있는 인자를 생략하고, 지정하고 싶은 인자를 이름을 붙여서 순서와 관계없이 지정할 수 있다.
+
+### 3.2.3 정적인 유틸리티 클래스 없애기: 최상위 함수와 프로퍼티
+
+코틀린에서는 자바의 util 클래스와 같은 무의미한 클래스가 필요가 없다. 대신 함수를 직접 소스 파일의 최상위 수준, 모든 다른 클래스의 밖에 위치시키면 된다. 다른 클래스에서 사용할때는 클래스 이름 없이 패키지 이름만 import하면 된다.
+
+JVM이 클래스 안에 들어있는 코드만을 실행할 수 있기 때문에 컴파일러는 이 파일을 컴파일 할 때 새로운 클래스를 정의해준다. 코틀린 컴파일러가 생성하는 클래스 이름은 최상위 함수가 들어있는 코틀린 소스 파일의 이름과 대응한다.
+
+**최상위 프로퍼티**
+
+함수와 마찬가지로 프로퍼티도 파일의 최상위 수준에 놓을 수 있다.
+
+# 4장 클래스, 객체, 인터페이스
+
+# 5장 람다식 프로그래밍
+
+# 6장 코틀린 타입 시스템
+
+# 7장 연산자 오버로딩과 기타 관례
+
+# 8장 고차 함수: 파라미터와 반환 값으로 람다 사용
+
+# 9장 제네릭스
+
+# 10장 애노테이션과 리플렉션
+
+# 11장 DSL 만들기
