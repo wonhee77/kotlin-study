@@ -120,4 +120,11 @@ class LeaningTest {
         assertThat(10 in range).isTrue()
         assertThat(11 in range).isFalse()
     }
+
+    @Test
+    @DisplayName("확장 프로퍼티")
+    fun extensionProperty() {
+        val extensionProperty = ExtensionProperty()
+        assertThat(extensionProperty.getTwo()).isEqualTo(2)
+    }
 }
