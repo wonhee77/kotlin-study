@@ -493,6 +493,100 @@ Pair는 코틀린 표준 라이브러리 클래스로 두 원소로 이뤄진 �
 
 to 함수는 확장 함수다. to를 사용하면 타입과 관계없이 임의의 순서쌍을 만들 수 있다.
 
+## 3.5 문자열과 정규식 다루기
+
+코틀린은 다양한 확장 함수를 제공함으로써 표준 자바 문자열을 더 즐겁게 다루게 해준다.
+
+### 3.5.1 문자열 나누기
+
+String의 split 메소드의 구분 문자열은 정규식이다.
+
+```kotlin
+println("12.345".split("\\.|-".toRegex() // 정규식을 명시적으로 만든다.
+```
+
+코틀린 정규식 문법은 자바와 똑같다.
+
+스플릿 확장 함수에서는 문자열을 하나 이상 인자로 받는 함수가 있다.
+
+### 3.5.2 정규식과 3중 따옴표로 묶은 문자열
+
+코틀린에서는 문자열에서 구분 문자열이 맨 나중에 나타난 곳 뒤의 부분 문자열을 반환하는 함수가 있다.
+
+```kotlin
+val path = "/Users/yole/kotlin-book/chaper.adoc"
+
+val directory = path.substringBeforeLast("/")
+val fullname = path.substringAfterLast("/")
+```
+
+3중 따옴표 문자열에서는 역슬래시를 포함한 어떤 문자도 이스케이프할 필요가 없다.
+
+### 3.5.3 여러 줄 3중 따옴표 문자열
+
+3중 따옴표를 쓰면 줄바꿈이 들어있는 프로그램 텍스트를 쉽게 문자열로 만들 수 있다.
+
+## 3.6 코드 다음기: 로컬 함수와 확장
+
+코틀린에서는 함수에서 추출한 함수를 원 함수 내부에 중첩시킬 수 있다.
+
+코드 중복을 로컬 함수를 통해 제거할 수 있다.
+
+```kotlin
+Class user(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+	if (user.name.isEmpty()) {
+		throw IlleagalArgumentException("Can't save user ${user.id}: empty Name")
+	}
+	if (user.address.isEmpty()) {
+		throw IlleagalArgumentException("Can't save user ${user.id}: empty Address")
+	}
+```
+
+코드의 중복이 많은 편은 아니지만 변수에따라 메소드가 길어질 수 있다.
+
+```kotlin
+Class user(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+	fun validate(user: User, value: String, fieldName: String) {
+		if (value.isEmpty()) {
+					throw IlleagalArgumentException("Can't save user ${user.id}: empty $fieldName")
+		}
+	}
+	validate(user, user.name, "Name)
+	validate(user, user.address, "Address")
+}
+```
+
+로컬 함수는 자신이 속한 바깥 함수의 모든 파라미터와 변수를 사용할 수 있다.
+
+```kotlin
+Class user(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+	fun validate(value: String, fieldName: String) { // user에 직접 접근
+		if (value.isEmpty()) {
+					throw IlleagalArgumentException("Can't save user ${user.id}: empty $fieldName")
+		}
+	}
+	validate(user, user.name, "Name)
+	validate(user, user.address, "Address")
+}
+```
+
+더 개선하고 싶다면 검증 로직을 User 클래스를 확장한 함수로 만들 수도 있다.
+
+## 3.7 요약
+
+- 코틀린은 자체 컬렉션 클래스를 정의하지 않지만 자바 클래스를 확장해서 더 풍부한 API를 제공한다.
+- 함수 파라미터의 디폴트 값을 정의하면 오버로딩한 함수를 정의할 필요성이 줄어든다.
+- 코틀린 파일에서 클래스 멤버가 아닌 최상위 함수와 프로퍼티를 직접 선언할 수 있다.
+- 확장 함수와 프로퍼티를 사용하면 외부 라이브러리에 정의된 클래스를 포함해 모든 클래스의 API를 그 클래스의 소스코드를 바꿀 필요 없이 확장할 수 있다.
+- 중위 호출을 통해 인자가 하나 밖에 없는 메소드나 확장 함수를 더 깔끔한 구문으로 호출할 수 있다.
+  - 로컬 함수를 써서 코드를 더 깔끔하게 유지하면서 중복을 제거할 수 있다.    
+
 # 4장 클래스, 객체, 인터페이스
 
 # 5장 람다식 프로그래밍

@@ -1,4 +1,4 @@
-package com.dietmate.dietmate
+package com.dietmate.dietmate.files
 
 fun ExtensionProperty.getTwo() = getOne() + 1
 

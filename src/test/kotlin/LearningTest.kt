@@ -1,5 +1,7 @@
 package com.dietmate.dietmate
 
+import com.dietmate.dietmate.files.ExtensionProperty
+import com.dietmate.dietmate.files.getTwo
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -126,5 +128,18 @@ class LeaningTest {
     fun extensionProperty() {
         val extensionProperty = ExtensionProperty()
         assertThat(extensionProperty.getTwo()).isEqualTo(2)
+    }
+
+    private fun localFunction(firstName: String, middleName: String, lastName: String) : String{
+        fun concatenateWithBlank(val1: String, val2: String) = val1 + " " +val2
+
+        return concatenateWithBlank(concatenateWithBlank(firstName, middleName), lastName)
+    }
+
+    @Test
+    @DisplayName("로컬 함수")
+    fun localFunctionTest() {
+        val fullName = localFunction("a", "b", "c")
+        assertThat(fullName).isEqualTo("a b c")
     }
 }
