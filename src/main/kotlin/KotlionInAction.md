@@ -589,6 +589,119 @@ fun saveUser(user: User) {
 
 # 4장 클래스, 객체, 인터페이스
 
+코틀린은 자바와 다르게 인터페이스에 프로퍼티 선언이 들어갈 수 있다. 자바와 달리 코틀린 선언은 기본적으로 final이며 public이다. 게다가 중첩 클래스는 기본적으로 내부 클래스가 아니다. 즉 코틀린의 중첩 클래스에는 외부 클래스에 대한 참조가 없다.
+
+## 4.1 클래스 계층 정의
+
+### 4.1.1 코틀린 인터페이스
+
+코틀린 인터페이스 안에는 추상 메소드뿐 아니라 구현이 있는 메소드도 정의할 수 있다. 다만 인터페이스에는 아무런 상태도 들어갈 수 없다.
+
+```kotlin
+interface Clickable {
+	fun click()
+}
+
+//인터페이스 구현
+class Button: Clickable {
+	override fun click() = println("Clicked")
+}
+```
+
+클래스 이름 위에 :을 붙이고 인터페이스와 클래스 이름을 적는 것으로 클래스 확장과 인터페이스 구현을 모두 처리한다.
+
+override 변경자는 상위 클래스나 상위 인터페이스에 있는 프로퍼티나 메소드를 오버라이드한다는 표시다. 하지만 자바와는 달리 override 변경자를 꼭 사용해야 한다. override 변경자는 실수로 상위 클래스의 메소드를 override하는 것을 방지해준다.
+
+디폴트 메소드는 default를 붙일 필요가 없다.
+
+```kotlin
+interface Clickable {
+	fun click()
+	fun showOff() = println("Clickable!")
+```
+
+동일한 메소드를 구현하는 다른 인터페이스를 함께 구현하는 경우 컴파일 에러가 발생하기 때문에 두 메소드를 아우르는 구현을 하위 클래스에 직접 구현하게 강제한다.
+
+```kotlin
+Class Button : Clickable, Focusable {
+	override fun click() = println("Clicked")
+	override fun showOff() {
+		super<Clickable>.showOff() // 상위 타입의 이름을 꺽쇠 괄호 사이에 넣어서 super를 지정
+		super<Focusable>.showOff()
+	}
+```
+
+### 4.1.2 open, final, abstract 변경자: 기본적으로 final
+
+취약한 기반 클래스라는 문제는 하위 클래스가 기반 클래스에 대해 가졌던 가정이 기반 클래스를 변경함으로써 깨져버리는 경우에 생긴다.
+
+특별히 하위 클래스에서 오버라이드하게 의도된 클래스와 메소드가 아니라면 모두 final로 만들라는 뜻이다.
+
+자바의 클래스와 메소드는 기본적으로 상속에 대해 열려있지만 코틀린의 클래스와 메소드는 기본적으로 final이다.
+
+어떤 클래스의 상속을 허용하려면 클래스 앞에 open 변경자를 붙여야 한다. 그와 더불어 오버라이드를 허용하고 싶은 메소드나 프로퍼티 앞에도 open 변경자를 붙여햐 한다.
+
+```kotlin
+open class RichButton : Clickable {
+	fun disabled() {} // 메소드 오버라이드 안됨
+	open fun animate() {} //오버라이드 가능
+	override fun clicke() {} // 오버라이드한 메소드는 기본적으로 open
+```
+
+오버라이드하는 메소드의 구현을 하위 클래스에서 오버라이드 하지 못하게 금지하려면 오버라이드하는 메소드 앞에 final을 명시해야 한다.
+
+추상 클래스의 추상 멤버 앞에는 open 변경자를 붙일 필요가 없다. 항상 열려 있다.
+추상 클래스에 속했더라도 비추상 함수는 기본적으로 파이널이지만 원한다면 open으로 오버라이드를 할 수 있다.
+
+### 4.1.3 가시성 변경자: 기본적으로 공개
+
+가시성 변경자는 코드 기반에 있는 선언에 대한 클래스 외부 접근을 제어한다.
+
+코틀린의 기본 가시성은 public이다. 코틀린은 패키지를 네임스페이스를 관리하기 위한 용도로만 사용한다. 그래서 패키지를 가시성 제어에 사용하지 않는다.
+
+패키지 전용 가시성에 대한 대안으로 코틀린에는 internal이라는 새로운 가시성 변경자를 도입했다. internal은 ‘모듈 내부에서만 볼 수 있음’이라는 뜻이다. 모듈은 한 번에 한꺼번에 컴파일되는 코틀린 파일들을 의미한다.
+
+모듈 내부 가시성은 모듈의 구현에 대해 진정한 캡슐화를 제공한다는 장점이 있다.
+
+다른 차이는 코틀린에서는 최상위 선언에 대해 private 가시성을 허용한다는 점이다.
+
+자바에서는 같은 패키지 안에서 protected 멤버에 접근할 수 있지만, 코틀린에서 protected 멤버는 오직 어떤 클래스나 그 클래스를 상속한 클래스 안에서만 보인다. 클래스를 확장한 함수는 그 클래스의 private이나 protected 멤버에 접근할 수 없다.
+
+### 4.1.4 내부 클래스와 중첩된 클래스: 기본적으로 중첩 클래스
+
+코틀린의 중첩클래스는 명시적으로 요청하지 않는 한 바깥쪽 클래스 인스턴스에 대한 접근 권한이 없다.
+
+코틀린 중첩 클래스에 아무런 변경자가 붙지 않으면 자바 static 중첩 클래스와 같다. 이를 내부 클래스로 변경해서 바깥쪽 클래스에 대한 참조를 포함하게 만들고 싶다면 inner 변경자를 붙여야 한다.
+
+내부 클래스 Inner 안에서 바깥쪽 클래스 Outer의 참조에 접근하려면 this@Outer라고 써야한다.
+
+```kotlin
+class Outer {
+	inner class Inner{
+		fun getOuterReference() : Outer = this@Outer
+	}
+}
+```
+
+### 4.1.5 봉인된 클래스: 클래스 계층 정의 시 계층 확장 제한
+
+상위 클래스에 sealed 변경자를 붙이면 그 상위 클래스를 상속한 하위 클래스 정의를 제한할 수 있다.
+
+```kotlin
+//as is
+interface Expr
+class Num(val value:Int) : Expr
+class Sum(val left: Expr, val right: Expr) : Expr
+
+//to be
+sealed class Expr {
+	class Num(val value: Int) : Expr()
+	class Sum(val left: Expr, val right: Expr) : Expr()
+```
+
+봉인된 클래스는 외부에 자신을 상속한 클래스를 둘 수 없다.
+내부적으로 Expr 클래스는 private 생성자를 가진다.
+
 # 5장 람다식 프로그래밍
 
 # 6장 코틀린 타입 시스템
