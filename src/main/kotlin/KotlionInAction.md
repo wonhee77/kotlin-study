@@ -702,6 +702,73 @@ sealed class Expr {
 봉인된 클래스는 외부에 자신을 상속한 클래스를 둘 수 없다.
 내부적으로 Expr 클래스는 private 생성자를 가진다.
 
+## 4.2 뻔하지 않은 생성자와 프로퍼티를 갖는 클래스 선언
+
+코틀린은 주생성자와 부생성자를 구분한다. 또한 코틀린에서는 초기화 블록을 통해 초기화 로직을 추가할 수 있다.
+
+### 4.2.1 클래스 초기화: 주 생성자와 초기화 블록
+
+```kotlin
+class User(val nickname: String)
+```
+
+이렇게 클래스 이름 뒤에 오는 괄호로 둘러싸인 코드를 주 생성자라고 부른다. 주 생성자는 생성자 파라미터를 지정하고 그 생성자 파라미터에 의해 초기화되는 프로퍼티를 정의하는 두 가지 목적에 쓰인다. 이 선언을 같은 목적을 달성할 수 있는 가장 명시적인 선언으로 풀어서 실제로는 어떤 일이 벌어지는지 살펴보자.
+
+```kotlin
+class User constructor(_nickname: String) {
+	val nickname: String
+	
+	init { // 초기화 블록
+		nickName = _nickname
+	}
+}
+```
+
+constructor 키워드는 주 생성자나 부 생성자 정의를 시작할 때 사용한다. init 키워드는 초기화 블록을 시작한다.
+
+주 생성자의 파라미터로 프로퍼티를 초기화한다면 그 주 생성자 파라미터 이름 앞에 val을 추가하는 방식으로 프로퍼티 정의와 초기화를 간략히 쓸 수 있다.
+
+```kotlin
+class User(val nickName: String) // val은 이 파라미터에 상응하는 프로퍼티가 생성된다는 뜻이다.
+```
+
+생성자 파라미터에도 디폴트 값을 정의할 수 있다.
+
+```kotlin
+class User(val nickname: String, val isSubscribed: Boolean = true)
+```
+
+모든 생성자 파라미터에 디폴트 값을 지정하면 컴파일러가 자동으로 파라미터가 없는 생성자를 만들어준다.
+
+클래스에 기반 클래스가 있다면 주 생성자에서 기반 클래스의 생성잘르 호출해야할 필요가 있다. 기반 클래스를 초기화하려면 기반 클래스 이름 뒤에 괄호를 치고 생성자 인자를 넘긴다.
+
+```kotlin
+open class User(val nicknames: String) {...}
+class TwitterUser(nickname: String) : User(nickname){...}
+```
+
+클래스를 정의할 때 별도로 생성자를 정의하지 않으면 컴파일러가 자동으로 아무일도 하지 않는 인자가 없는 디폴트 생성자를 만들어준다.
+
+```kotlin
+open class Button
+```
+
+Button의 생성자는 아무 인자도 받지 않지만, Button 클래스를 상속한 하위 클래스는 반드시 Button 클래스의 생성자를 호출해야 한다.
+
+```kotlin
+class RadioButton: Button()
+```
+
+이 규칙으로 인해 기반 클래스의 이름 뒤에는 꼭 빈 괄호가 들어간다.
+
+클래스 정의에 있는 상위 클래스 및 인터페이스 목록에서 이름 뒤에 괄호가 붙어있는지 살펴보면 쉽게 기반 클래스와 인터페이스를 구별할 수 있다.
+
+어떤 클래스를 클래스 외부에서 인스턴스화하지 못하게 막고 싶다면 모든 생성자를 private으로 만들변 된다.
+
+```kotlin
+class Secretive private constructor() {}
+```
+
 # 5장 람다식 프로그래밍
 
 # 6장 코틀린 타입 시스템
