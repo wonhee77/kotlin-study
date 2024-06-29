@@ -769,6 +769,70 @@ class RadioButton: Button()
 class Secretive private constructor() {}
 ```
 
+### 4.2.2 부 생성자: 상위 클래스를 다른 방식으로 초기화
+
+this()를 통해 클래스 자신의 다른 생성자를 호출할 수 있다.
+
+```kotlin
+Class MyButton : View {
+	constructor(ctx: Context) : this(ctx, MY_STYLE) {...}
+	constructor(ctx: Context, attr: AttributeSet) : super(ctx, attr) {...
+```
+
+클래스에 주 생성자가 없다면 모든 부 생성자는 반드시 상위 클래스를 초기화하거나 다른 생성자에게 생성을 위임해야 한다. 각 부 생성자에서 객체 생성을 위임하는 화살표를 따라가면 그 끝에는 상위 클래스 생성자를 호출하는 화살표가 있어야 한다.
+
+### 4.2.3 인터페이스에 선언된 프로퍼티 구현
+
+코틀린에서는 인터페이스에 추상 프로퍼티 선언을 넣을 수 있다.
+
+```kotlin
+interface User {
+	val nickname: String
+}
+
+class PrivateUser(override val nickname: String) : User // 주 생성자에 있는 프로퍼티
+
+class SubscribingUser(val email: String) : User {
+	override val nickname: String
+		get() = email.substringBefore('@') // 커스텀 게터
+}
+
+class FacebookUser(val accountId: Int) : User {
+	override val nickname = getFacebookName(accountId)
+}
+```
+
+PrivateUser는 주 생성자 안에 프로퍼티를 직접 선언하는 간결한 구문을 사용한다.
+
+이 프로퍼티는 User의 추상 프로퍼티를 구현하고 있으므로 override를 표시해야 한다.
+
+SubscribingUser는 커스텀 게터로 nickname 프로퍼티를 설정한다. 이 프로퍼티는 뒷받침하는 필드에 값을 저장하지 않고 매번 이메일 주소에서 별명을 계산해서 반환한다.
+
+사용자 ID를 받아서 그 사용자의 이름을 반환해주는 getFacebookName 함수를 호출해서 nickname을 초기화 한다.
+
+SubscribingUser의 nickname은 매번 호출될 때마다 substringBefore를 호출해 계산하는 커스텀 게터를 활용하고, FacebookUser의 nickname은 객체 초기화 시 계산한 데이터를 뒷받침하는 필드에 저장했다가 불러오는 방식을 활용한다.
+
+인터페이스에는 추상 프로퍼티뿐 아니라 게터와 세터가 있는 프로퍼티를 선언할 수도 있다. 물론 그런 게터와 세터는 뒷받침하는 필드를 참조할 수 없다.
+
+### 4.2.4 게터와 세터에서 뒷받침하는 필드에 접근
+
+값을 저장하는 프로퍼티와 커스텀 접근자에서 매번 값을 계산하는 프로퍼티에 대해 살펴봤다. 이제 이 두 유형을 조합해서 어떤 값을 저장하되 그 값을 변경하거나 읽을 때마다 정해진 로직을 실행하는 유형의 프로퍼티를 만드는 방법을 살펴보자. 값을 저장하는 동시에 로직을 실행할 수 있게 하기 위해서는 접근자 안에서 프로퍼티를 뒷받침하는 필드에 접근할 수 있어야 한다.
+
+코틀린에서 프로퍼티의 값을 바꿀 때는 user.address = “new value”처럼 필드 설정 구문을 사용한다.
+
+변경 가능한 프로퍼티의 게터와 세터 중 한쪽만 직접 정의해도 된다.
+
+### 4.2.5 접근자의 가시성 변경
+
+접근자의 가시성은 기본적으로는 프로퍼티의 가시성과 같지만 원한다면 get이나 set 앞에 가시성 변경자를 추가해서 접근자의 가시성을 변경할 수 있다.
+
+```kotlin
+class LengthCounter {
+	var counter: Int = 0
+		private set
+}
+```
+
 # 5장 람다식 프로그래밍
 
 # 6장 코틀린 타입 시스템

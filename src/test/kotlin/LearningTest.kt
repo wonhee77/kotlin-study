@@ -57,8 +57,7 @@ class LeaningTest {
     }
 
     enum class Fruit(val min: Int, val max: Int) {
-        BANANA(1, 10),
-        APPLE(2,4);
+        BANANA(1, 10), APPLE(2, 4);
 
         fun getSum() = min + max
     }
@@ -130,8 +129,8 @@ class LeaningTest {
         assertThat(extensionProperty.getTwo()).isEqualTo(2)
     }
 
-    private fun localFunction(firstName: String, middleName: String, lastName: String) : String{
-        fun concatenateWithBlank(val1: String, val2: String) = val1 + " " +val2
+    private fun localFunction(firstName: String, middleName: String, lastName: String): String {
+        fun concatenateWithBlank(val1: String, val2: String) = val1 + " " + val2
 
         return concatenateWithBlank(concatenateWithBlank(firstName, middleName), lastName)
     }
@@ -141,5 +140,24 @@ class LeaningTest {
     fun localFunctionTest() {
         val fullName = localFunction("a", "b", "c")
         assertThat(fullName).isEqualTo("a b c")
+    }
+
+    @Test
+    @DisplayName("커스텀 접근자")
+    fun customGetter() {
+        val rectangular1 = Rectangular(1, 2)
+        assertThat(rectangular1.height).isEqualTo(1)
+        assertThat(rectangular1.width).isEqualTo(2)
+        assertThat(rectangular1.isSquare).isFalse()
+
+        val rectangular2 = Rectangular(2, 2)
+        assertThat(rectangular2.height).isEqualTo(2)
+        assertThat(rectangular2.width).isEqualTo(2)
+        assertThat(rectangular2.isSquare).isTrue()
+    }
+
+    class Rectangular(val height: Int, val width: Int) {
+        val isSquare: Boolean
+            get() = height == width
     }
 }
