@@ -887,6 +887,122 @@ class DelegatingCollection<T> {
 } : Collections<T> by innerList()
 ```
 
+## 4.4 object 키워드: 클래스 선언과 인스턴스 생성
+
+코틀린에서는 object 키워드를 다양한 상황에서 사용하지만 모든 경우 클래스를 정의하면서 동시에 인스턴스 객체를 생성한다는 공통점이 있다. object 키워드를 사용하는 여러 상황을 살펴보자.
+
+- 객체 선언은 싱글턴을 정의하는 방법 중 하나다.
+- 동반 객체는 인스턴스 메소드는 아니지만 어떤 클래스와 관련 있는 메소드와 팩토리 메소드를 담을 때 쓰인다.
+- 객체 식은 자바의 무명 내부 클래스 대신 쓰인다.
+
+### 4.4.1 객체 선언: 싱글턴을 쉽게 만들기
+
+코틀린은 객체 선언 기능을 통해 싱글턴을 언어에서 기본 지원한다. 객체 선언은 클래스 선언과 그 객체에 속한 단일 인스턴스의 선언을 합친 선언이다.
+
+```kotlin
+object Payroll {
+	val allEmployees = arrayListOf<Person>()
+	fun calculateSalary() {
+		for (person in allEmployees) {
+			...
+		}
+	}
+}
+```
+
+객체 선언은 object 키워드로 시작한다. 객체 선언은 클래스를 정의하고 그 클래스의 인스턴스를 만들어서 변수에 저장하는 모든 작업을 단 한문장으로 처리한다.
+
+생성자는 객체 선언에 쓸 수 없다. 변수와 마찬가지로 객체 선언에 사용한 이름 뒤에 마침표를 붙이면 객체에 속한 메소드나 프로퍼티에 접근할 수 있다.
+
+```kotlin
+Payroll.allEmployees.add(Person(...))
+Payroll.calculateSalary()
+```
+
+객체 선언도 클래스나 인터페이스를 상속할 수 있다.
+
+### 4.4.2 동반 객체: 팩토리 메소드와 정적 멤버가 들어갈 장소
+
+코틀린 언어는 자바 static 키워드를 지원하지 않는다. 그 대신 코틀린에서는 패키지 수준의 최상위 함수와 객체 선언을 활용한다. 대부분의 경우 최상위 함수를 활용하는 편을 더 권장한다. 하지만 최상위 함수는 private으로 표시된 클래스 비공개 멤버에 접근할 수 없다. 그래서 클래스의 인스턴스와 관계없이 호출해야 하지만, 클래스 내부 정보에 접근해야 하는 함수가 필요할 때는 클래스에 중첩된 객체 선언의 멤버 함수로 정의해야 한다. 그럼 함수의 대표적인 예로 팩토리 메소드를 들 수 있다.
+
+클래스 안에 정의된 객체 중 하나에 companion이라는 특별한 표시를 붙이면 그 클래스의 동반 객체로 만들 수 있다. 동반 객체의 프로퍼티나 메소드에 접근하려면 그 동반 객체가 정의된 클래스 이름을 사용한다. 이때 객체의 이름을 따로 지정할 필요가 없다.
+
+```kotlin
+class A {
+	companion object {
+		fun bar() {
+			println("Companion object called")
+		}
+	}
+}
+```
+
+동반 객체가 private 생성자를 호출하지 좋은 위치다. 동반 객체는 자신을 둘러싼 클래스의 모든 private 멤버에 접근할 수 있다. 따라서 동반 객체는 바깥쪽 클래스의 private 생성자도 호출할 수 있다.
+
+```kotlin
+class User private constructor(val nickname: String) {
+	companion object {
+		fun newSubscribingUser(email: String) = User(email.substringBefore('@')
+		fun newFacebookUser(accountId: Int) = User(getFacebookName(accountId))
+	}
+}
+
+>>> val subscribingUser = User.newSubscribingUser("bob@gmail.com")
+```
+
+팩토리 메소드는 그 팩토리 메소드가 선언된 클래스의 하위 클래스 객체를 반환할 수도 있다.
+
+### 4.4.3 동반 객체를 일반 객체처럼 사용
+
+동반 객체는 클래스 안에 정의된 일반 객체다. 따라서 동반 객체에 이름을 붙이거나, 동반 객체가 인터페이스를 상속하거나, 동반 객체 안에 확장 함수와 프로퍼티를 정의할 수 있다.
+
+**동반 객체에서 인터페이스 구현**
+
+**동반 객체 확장**
+
+```kotlin
+// 비즈니스 로직 모듈
+class Pserson(val firstName: String, val lastName: String) {
+	companion object {
+	}
+}
+
+// 클라이언트/서버 통신 모듈
+fun Person.companion.fromJson(json: String) : Person {
+	...
+}
+
+val p = Person.fromJSON(json)
+```
+
+### 4.4.4 객체 식: 무명 내부 클래스를 다른 방식으로 작성
+
+무명 객체를 정의할 때도 object 키워드를 쓴다. 무명 객체는 자바의 무명 내부 클래스(익명 내부 클래스)를 대신한다.
+
+```kotlin
+window.addMouseListener(
+	object: MouseAdapter() {
+		override fun mouseClicked(e: MouseEvent) {
+		 ...
+```
+
+## 4.5 요약
+
+- 코틀린의 인터페이스는 자바 인터페이스와 비슷하지만 디폴트 구현을 포함할 수 있고, 프로퍼티도 포함할 수 있다.
+- 모든 코틀린 선언은 기본적으로 final이며 public이다.
+- 선언이 final이 되지 않게 만들려면 앞에 open을 붙여야 한다.
+- internal 선언은 같은 모듈 안에서만 볼 수 있다.
+- 중첩 클래스는 기본적으로 내부클래스가 아니다. 바깥쪽 클래스에 대한 참조를 중첩 클래스 안에 포함시키려면 inner 클래스를 중첩 클래스 선언 앞에 붙여서 내부 클래스로 만들어야 한다.
+- sealed 클래스를 상속하는 클래스를 정의하려면 반드시 부모 클래스 정의 안에 중첩 클래스로 정의해야 한다.
+- 초기화 블록과 부 생성자를 활용해 클래스 인스턴스를 더 유연하게 초기화할 수 있다.
+- field 식별자를 통해 프로퍼티 접근자 안에서 프로퍼티의 데이터를 저장하는 데 쓰이는 뒷받침하는 필드를 참조할 수 있다.
+- 데이터 클래스를 사용하면 컴파일러가 equals, hashCode, toString, copy 등의 메소드를 자동생성해준다.
+- 클래스 위임을 사용하면 위임 패턴을 구현할 때 필요한 수많은 성가신 준비 코드를 줄일 수 있다.
+- 객체 선언을 사용하면 코틀린답게 싱글턴 클래스를 정의할 수 있다.
+- 동반 객체는 자바의 정적 메소드와 필드 정의를 대신한다.
+- 동반 객체도 다른 객체와 마찬가지로 인터페이스를 구현할 수 있다. 외부에서 동반 객체에 대한 확장 함수와 프로퍼티를 정의할 수 있다.
+- 코틀린의 객체 식은 자바의 무명 내부 클래스를 대신한다.
+
 # 5장 람다식 프로그래밍
 
 # 6장 코틀린 타입 시스템
