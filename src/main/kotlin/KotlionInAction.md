@@ -1171,6 +1171,68 @@ fun createAllDoneRunnable(): Runnable {
 	return Runnable { println("All done!") }
 }
 ```
+### 5.5 수신 객체 지정 람다: with와 apply
+
+수신 객체를 명시하지 않고 람다의 본문 안에서 다른 객체의 메소드를 호출할 수 있다. 그런 람다를 수신 객체 지정 람다라고 부른다.
+
+### 5.5.1 with 함수
+
+```kotlin
+fun alphabet(): String {
+	val result = StringBuilder()
+	for (letter in 'A'..'Z') {
+		result.append(letter)
+	}
+	result.append("\nNow I know the alphabet!")
+	return result.toString() 
+}
+```
+
+앞의 예제를 with로 다시 작성한 결과를 살펴보자.
+
+```kotlin
+fun alphabet(): String {
+	val stringBuilder = StringBuilder()
+	return with(stringBuilder) {
+		for (letter in 'A'..'Z') {
+			this.append(letter)
+		}
+		append("\nNow I know the alphabet!")
+		this.toString()
+	}
+}
+```
+
+with문은 언어가 제공하는 특별한 구문처럼 보인다. 하지만 실제로 파라미터가 2개 있는 함수다. 첫번 째 파라미터는 stringBuilder이고, 두 번째 파라미터는 람다다. 람다를 괄호 밖으로 빼내는 관례를 사용함에 따라 전체 함수 호출이 언어가 제공하는 특별 구문처럼 보인다.
+
+인자로 받은 람다 본문에서는 this를 사용해 그 수신 객체에 접근할 수 있다.
+
+더 리팩토링해서 불필요한 stringBuilder 변수를 없앨 수도 있다.
+
+```kotlin
+fun alphabet() = with(StringBuilder()) {
+		for (letter in 'A'..'Z') {
+			this.append(letter)
+		}
+		append("\nNow I know the alphabet!")
+		this.toString()
+}
+```
+
+### 5.5.2 apply 함수
+
+apply 함수는 거의 with와 같지만 유일한 차이는 apply는 항상 자신에게 전달된 객체를 반환한다는 점 뿐이다.
+
+```kotlin
+fun alphabet() = StringBuilder().apply {
+	for (letter in 'A'..'Z') {
+		append(letter)
+	}
+	append("...")
+	}.toString()
+```
+
+apply의 수신 객체가 전달받은 람다의 수신 객체가 된다.
 
 # 6장 코틀린 타입 시스템
 
