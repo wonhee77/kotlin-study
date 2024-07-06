@@ -1308,6 +1308,83 @@ if (person != null) sendEmailTo(person.email)
 getTheBestPersonInTheWorld()?.let { sendEmailTo(it.email) }
 ```
 
+### 6.1.8 나중에 초기화할 프로퍼티
+
+코틀린에서 클래스 안의 널이 될 수 없는 프로퍼티를 생성자 안에서 초기화 하지 않고 특별한 메소드 안에서 초기화할 수는 없다. 게다가 프로퍼티 타입이 널이 될 수 없는 타입이라면 반드시 널이 아닌 값으로 그 프로퍼티를 초기화해야 한다.
+
+lateinit 변경자를 붙이면 프로퍼티를 나중에 초기화할 수 있다.
+
+```kotlin
+class MyService {
+	fun performAction() : String = "foo"
+}
+
+class MyTest {
+	private lateinit var myService: MyService
+	
+	@Before fun setUp() {
+		myService = MyService()
+	}
+	
+	@Test fun testAction() {
+		Assert.assertEquals("foo", myService.performaction()) // 널검사를 하지 않는다.
+```
+
+프로퍼티는 var 여야하고 초기화 되기 전에 접근하면 “lateinit property MyService has not been initialized”라는 예외가 발생한다.
+
+### 6.1.9 널이 될 수 있는 타입 확장
+
+널이 될 수 있는 타입에 대한 확장 함수를 정의하면 null 값을 다루는 강력한 도구로 활용할 수 있다. 어떤 메소드를 호출하기 전에 수신 객체 역할을 하는 변수가 널이 될 수 없다고 보장하는 대신, 직접 변수에 대해 메소드를 호출해도 확장 함수인 메소드가 알아서 널을 처리해준다.
+
+```kotlin
+fun verifyUserInput(input: String?) {
+	if (input.isNulOrBlank()) { // 안전한 호출을 하지 않아도 된다.
+	}
+}
+```
+
+isNullOrBlank()는 널을 명시적으로 검사해서 널인 경우 true를 반환하고, 널이 아닌 경우 isBlank를 호출한다.
+
+### 6.1.10 타입 파라미터의 널 가능성
+
+코틀린에서는 함수나 클래스의 모든 타입 파라미터는 기본적으로 널이 될 수 있다. 타입 파라미터 T를 클래스나 함수 안에서 타입 이름으로 사용하면 이름 끝에 물음표가 없더라도 T가 널이 될 수 있는 타입이다.
+
+```kotlin
+fun <T> printHashCode(t: T) {
+	println(t?.hashCode())
+}
+>>> printHashCode(null)
+null
+```
+
+타입 파라미터가 널이 아님을 확실히 하려면 널이 될 수 없는 타입상한을 지정해야 한다.
+
+```kotlin
+fun <T: Any> printHashCode(t: T) { // T는 널이 될 수 없는 타입이다.
+	println(t.hashCode())
+}
+```
+
+타입 파라미터는 널이 될 수 있는 타입을 표시하려면 반드시 물음표를 타입 이름으로 붙여야 한다는 규칙의 유일한 예외다.
+
+### 6.1.11 널 가능성과 자바
+
+자바의 @Nullable String은 코틀린에서 String?과 같고 자바의 @NotNull String은 코틀린의 String과 같다.
+
+널 가능성 애토네이션이 소스코드에 없는 경우 자바의 타입은 코틀린의 플랫폼 타입이 된다.
+
+**플랫폼 타입**
+
+플랫폼 타입은 코틀린이 널 관련 정보를 알 수 없는 타입을 말한다.
+
+자바의 대부분의 라이브러리는 널 관련 애노테이션을 쓰지 않는다. 따라서 모든 타입을 널이 아닌 것처럼 다루기 쉽지만 그렇게 하면 오류가 발생할 수 있다. 오류를 피하려면 사용하려는 자바 메소드의 문서를 자세히 살펴봐서 그 메소드가 널을 반환할지 알아내고 널을 반환하는 메소드에 대한 널 검사를 추가해야 한다.
+
+**상속**
+
+코틀린에서 자바 메소드를 오버라이드할 때 그 메소드의 파라미터와 반환 타입을 널이 될 수 있는 타입으로 선언할지 널이 될 수 없는 타입으로 선언할지 경정해야 한다.
+
+자바 클래스나 인터페이스를 코틀린에서 구현할 경우 널 가능성을 제대로 처리하는 일이 중요하다.
+
 # 7장 연산자 오버로딩과 기타 관례
 
 # 8장 고차 함수: 파라미터와 반환 값으로 람다 사용
